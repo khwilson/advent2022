@@ -128,8 +128,45 @@ fn day03() {
     println!("The answer the part 2 is: {}", total);
 }
 
+fn day04() {
+    // Full overlaps
+    let mut total1 = 0;
+    let mut total2 = 0;
+    if let Ok(lines) = read_lines("./input/input04") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let mut tip = ip.trim().split(",");
+                let a = tip.next().unwrap();
+                let b = tip.next().unwrap();
+
+                let mut ai = a.split("-");
+                let al: i32 = ai.next().unwrap().parse().unwrap();
+                let ar: i32 = ai.next().unwrap().parse().unwrap();
+
+                let mut bi = b.split("-");
+                let bl: i32 = bi.next().unwrap().parse().unwrap();
+                let br: i32 = bi.next().unwrap().parse().unwrap();
+
+                // Full overlap
+                if (al <= bl && br <= ar) || (bl <= al && ar <= br) {
+                    total1 += 1;
+                }
+
+                // Any overlap
+                if (al <= bl && bl <= ar) || (al <= br && br <= ar) ||
+                   (bl <= al && al <= br) || (bl <= ar && ar <= br) {
+                    total2 += 1;
+                }
+            }
+        }
+    }
+    println!("The answer the part 1 is: {}", total1);
+    println!("The answer the part 2 is: {}", total2);
+}
+
 fn main() {
     day01();
     day02();
     day03();
+    day04();
 }
