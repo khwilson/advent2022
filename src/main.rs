@@ -166,7 +166,8 @@ fn day04() {
 
 fn day05() {
     let mut reading_original_position = true;
-    let mut positions: Vec<Vec<char>> = vec!();
+    let mut positions1: Vec<Vec<char>> = vec!();
+    let mut positions2: Vec<Vec<char>> = vec!();
     if let Ok(lines) = read_lines("./input/input05") {
         for line in lines {
             if let Ok(ip) = line {
@@ -174,8 +175,9 @@ fn day05() {
                 if tip.len() == 0 {
                     reading_original_position = false;
                     // Pop the last element and reverse the vecs
-                    for i in 0..positions.len() {
-                        positions[i].reverse();
+                    for i in 0..positions1.len() {
+                        positions1[i].reverse();
+                        positions2[i].reverse();
                     }
                     continue;
                 }
@@ -184,15 +186,17 @@ fn day05() {
                     let num_cols = (tip.len() + 1) / 4;
 
                     // Initialize data now that we know its size
-                    while positions.len() < num_cols {
-                        positions.push(vec!());
+                    while positions1.len() < num_cols {
+                        positions1.push(vec!());
+                        positions2.push(vec!());
                     }
 
                     // Extract the data (assumes well formatted)
                     for i in 0..num_cols {
                         let c = tip.chars().nth(4 * i + 1).unwrap();
                         if c.is_ascii_alphabetic() {
-                            positions[i].push(c);
+                            positions1[i].push(c);
+                            positions2[i].push(c);
                         }
                     }
                 } else {
@@ -205,75 +209,33 @@ fn day05() {
 
                     // Actually move the data
                     for _ in 0..x {
-                        let elt = positions[y - 1].pop().unwrap();
-                        positions[z - 1].push(elt);
+                        let elt = positions1[y - 1].pop().unwrap();
+                        positions1[z - 1].push(elt);
+                    }
+
+                    // Part 2's alternate moving strategy
+                    let mut tmp: Vec<char> = vec!();
+                    for _ in 0..x {
+                        let elt = positions2[y - 1].pop().unwrap();
+                        tmp.push(elt);
+                    }
+                    for _ in 0..x {
+                        let elt = tmp.pop().unwrap();
+                        positions2[z - 1].push(elt);
                     }
                 }
             }
         }
     }
     print!("The answer to part 1 is: ");
-    for i in 0..positions.len() {
-        print!("{}", positions[i].last().unwrap());
+    for i in 0..positions1.len() {
+        print!("{}", positions1[i].last().unwrap());
     }
     println!();
 
-    // Same as last part, but move as an array
-    let mut reading_original_position = true;
-    let mut positions: Vec<Vec<char>> = vec!();
-    if let Ok(lines) = read_lines("./input/input05") {
-        for line in lines {
-            if let Ok(ip) = line {
-                let tip = ip.trim_end();
-                if tip.len() == 0 {
-                    reading_original_position = false;
-                    // Pop the last element and reverse the vecs
-                    for i in 0..positions.len() {
-                        positions[i].reverse();
-                    }
-                    continue;
-                }
-
-                if reading_original_position {
-                    let num_cols = (tip.len() + 1) / 4;
-
-                    // Initialize data now that we know its size
-                    while positions.len() < num_cols {
-                        positions.push(vec!());
-                    }
-
-                    // Extract the data (assumes well formatted)
-                    for i in 0..num_cols {
-                        let c = tip.chars().nth(4 * i + 1).unwrap();
-                        if c.is_ascii_alphabetic() {
-                            positions[i].push(c);
-                        }
-                    }
-                } else {
-                    // Now we get a bunch of lines like:
-                    // move X from Y to Z so just break on spaces
-                    let mut vals = tip.split(" ");
-                    let x: usize = vals.nth(1).unwrap().parse().unwrap();
-                    let y: usize = vals.nth(1).unwrap().parse().unwrap();
-                    let z: usize = vals.nth(1).unwrap().parse().unwrap();
-
-                    // Actually move the data
-                    let mut tmp: Vec<char> = vec!();
-                    for _ in 0..x {
-                        let elt = positions[y - 1].pop().unwrap();
-                        tmp.push(elt);
-                    }
-                    for _ in 0..x {
-                        let elt = tmp.pop().unwrap();
-                        positions[z - 1].push(elt);
-                    }
-                }
-            }
-        }
-    }
     print!("The answer to part 2 is: ");
-    for i in 0..positions.len() {
-        print!("{}", positions[i].last().unwrap());
+    for i in 0..positions2.len() {
+        print!("{}", positions2[i].last().unwrap());
     }
     println!();
 }
