@@ -240,10 +240,41 @@ fn day05() {
     println!();
 }
 
+fn day06() {
+    if let Ok(lines) = read_lines("./input/input06") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let tip = ip.trim_end();
+
+                for (i, (a, b, c, d)) in tip.chars().tuple_windows().enumerate() {
+                    if (a != b) && (a != c) && (a != d) && (b != c) && (b != d) && (c != d) {
+                        println!("The answer to part 1 is: {}", i + 4);
+                        break;
+                    }
+                }
+
+                let mut i = 0;
+                loop {
+                    if i + 14 >= tip.len() {
+                        panic!("Didn't find an answer");
+                    }
+                    let tmp: HashSet<char> = tip[i..i+14].chars().into_iter().collect();
+                    if tmp.len() == 14 {
+                        println!("The answer to part 2 is: {}", i + 14);
+                        break;
+                    }
+                    i += 1;
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     day01();
     day02();
     day03();
     day04();
     day05();
+    day06();
 }
