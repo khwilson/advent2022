@@ -245,26 +245,19 @@ fn day06() {
         for line in lines {
             if let Ok(ip) = line {
                 let tip = ip.trim_end();
+                let ans1 = tip.chars().collect_vec()
+                    .windows(4)
+                    .position(
+                        |x| x.iter().copied().collect::<HashSet<char>>().len() == 4
+                    ).unwrap();
+                let ans2 = tip.chars().collect_vec()
+                    .windows(14)
+                    .position(
+                        |x| x.iter().copied().collect::<HashSet<char>>().len() == 14
+                    ).unwrap();
 
-                for (i, (a, b, c, d)) in tip.chars().tuple_windows().enumerate() {
-                    if (a != b) && (a != c) && (a != d) && (b != c) && (b != d) && (c != d) {
-                        println!("The answer to part 1 is: {}", i + 4);
-                        break;
-                    }
-                }
-
-                let mut i = 0;
-                loop {
-                    if i + 14 >= tip.len() {
-                        panic!("Didn't find an answer");
-                    }
-                    let tmp: HashSet<char> = tip[i..i+14].chars().into_iter().collect();
-                    if tmp.len() == 14 {
-                        println!("The answer to part 2 is: {}", i + 14);
-                        break;
-                    }
-                    i += 1;
-                }
+                println!("The answer to part 1 is: {}", ans1 + 4);
+                println!("The answer to part 2 is: {}", ans2 + 14);
             }
         }
     }
