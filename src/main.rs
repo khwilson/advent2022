@@ -328,7 +328,7 @@ fn day07() {
                                     ".." => {
                                         current_node_idx = nodes[current_node_idx].parent_idx;
                                     },
-                                    file_name => {
+                                    _ => {
                                         let idx = nodes.len();
                                         let this_node = Node {
                                             parent_idx: current_node_idx,
