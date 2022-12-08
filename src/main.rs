@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -263,6 +263,140 @@ fn day06() {
     }
 }
 
+enum ReadState {
+    COMMAND = 0,
+    LS = 1,
+}
+
+struct Node {
+    name: String,
+
+    parent_idx: usize,
+    idx: usize,
+    child_idxs: Vec<usize>,
+
+    size: u32,
+
+    is_dir: bool,
+    is_file: bool,
+}
+
+fn get_node_size(cache: &mut HashMap<usize, u32>, node_idx: usize, nodes: &Vec<Node>) -> u32 {
+    if nodes[node_idx].is_file {
+        return nodes[node_idx].size;
+    }
+    match cache.get(&node_idx) {
+        Some(size) => { *size },
+        None => {
+            let size: u32 = nodes[node_idx].child_idxs.iter().map(|x| get_node_size(cache, *x, nodes)).sum();
+            cache.insert(node_idx, size);
+            size
+        }
+    }
+}
+
+fn day07() {
+    let mut read_state = ReadState::COMMAND;
+
+    let root = Node {
+        name: "/".to_string(),
+        parent_idx: 0,
+        idx: 0,
+        child_idxs: vec![],
+        size: 0,
+        is_dir: true,
+        is_file: false,
+    };
+    let mut nodes: Vec<Node> = vec![root];
+    let mut current_node_idx: usize = 0;
+
+    if let Ok(lines) = read_lines("./input/input07") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let tip = ip.trim_end();
+                let mut stip = tip.split(" ").collect_vec();
+
+                if stip[0] == "$" {
+                    read_state = ReadState::COMMAND;
+                }
+
+                match read_state {
+                    ReadState::COMMAND => {
+                        match stip[1] {
+                            "cd" => {
+                                match stip[2] {
+                                    "/" => {
+                                        current_node_idx = 0;
+                                    },
+                                    ".." => {
+                                        current_node_idx = nodes[current_node_idx].parent_idx;
+                                    },
+                                    file_name => {
+                                        let idx = nodes.len();
+                                        let this_node = Node {
+                                            name: file_name.to_string(),
+                                            parent_idx: current_node_idx,
+                                            idx,
+                                            child_idxs: vec![],
+                                            size: 0,
+                                            is_dir: true,
+                                            is_file: false,
+                                        };
+                                        nodes[current_node_idx].child_idxs.push(idx);
+                                        current_node_idx = idx;
+                                        nodes.push(this_node);
+                                    }
+                                }
+                            },
+                            "ls" => {
+                                read_state = ReadState::LS;
+                            },
+                            _ => panic!("This shouldn't happen"),
+                        }
+                    },
+                    ReadState::LS => {
+                        if stip[0] == "dir" {
+                            // We don't actually care about dirs
+                        } else {
+                            let file_size: u32 = stip[0].parse().unwrap();
+                            let file_name: String = stip[0].parse().unwrap();
+                            let idx = nodes.len();
+                            let this_node = Node {
+                                name: file_name,
+                                parent_idx: current_node_idx,
+                                idx,
+                                child_idxs: vec![],
+                                size: file_size,
+                                is_dir: false,
+                                is_file: true,
+                            };
+                            nodes[current_node_idx].child_idxs.push(idx);
+                            nodes.push(this_node);
+                        }
+                    },
+                }
+            }
+        }
+    }
+    let mut cache = HashMap::new();
+    let dir_sizes: Vec<u32> = nodes.iter()
+        .filter(|node| node.is_dir)
+        .map(|node| get_node_size(&mut cache, node.idx, &nodes))
+        .collect();
+
+    let ans1: u32 = dir_sizes.iter().filter(|x| **x <= 100000).sum();
+    println!("The answer to part 1 is: {}", ans1);
+
+    let total_space: u32 = 70000000;
+    let need_space: u32 = 30000000;
+    let used_space = get_node_size(&mut cache, 0, &nodes);
+    let avail_space = total_space - used_space;
+    let find_space: u32 = need_space - avail_space;
+
+    let ans2 = dir_sizes.iter().filter(|size| **size >= find_space).min().unwrap();
+    println!("The answer to part 2 is: {}", ans2);
+}
+
 fn main() {
     day01();
     day02();
@@ -270,4 +404,5 @@ fn main() {
     day04();
     day05();
     day06();
+    day07();
 }
