@@ -269,8 +269,6 @@ enum ReadState {
 }
 
 struct Node {
-    name: String,
-
     parent_idx: usize,
     idx: usize,
     child_idxs: Vec<usize>,
@@ -299,7 +297,6 @@ fn day07() {
     let mut read_state = ReadState::COMMAND;
 
     let root = Node {
-        name: "/".to_string(),
         parent_idx: 0,
         idx: 0,
         child_idxs: vec![],
@@ -314,7 +311,7 @@ fn day07() {
         for line in lines {
             if let Ok(ip) = line {
                 let tip = ip.trim_end();
-                let mut stip = tip.split(" ").collect_vec();
+                let stip = tip.split(" ").collect_vec();
 
                 if stip[0] == "$" {
                     read_state = ReadState::COMMAND;
@@ -334,7 +331,6 @@ fn day07() {
                                     file_name => {
                                         let idx = nodes.len();
                                         let this_node = Node {
-                                            name: file_name.to_string(),
                                             parent_idx: current_node_idx,
                                             idx,
                                             child_idxs: vec![],
@@ -359,10 +355,8 @@ fn day07() {
                             // We don't actually care about dirs
                         } else {
                             let file_size: u32 = stip[0].parse().unwrap();
-                            let file_name: String = stip[0].parse().unwrap();
                             let idx = nodes.len();
                             let this_node = Node {
-                                name: file_name,
                                 parent_idx: current_node_idx,
                                 idx,
                                 child_idxs: vec![],
