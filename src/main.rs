@@ -1,7 +1,9 @@
-use std::collections::{HashSet, HashMap};
+use std::cmp::max;
+use std::collections::{HashSet, HashMap, VecDeque};
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+use std::vec;
 use itertools::Itertools;
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
@@ -391,6 +393,91 @@ fn day07() {
     println!("The answer to part 2 is: {}", ans2);
 }
 
+fn day08() {
+    // Read in the trees
+    let mut trees: Vec<Vec<i8>> = vec![];
+    if let Ok(lines) = read_lines("./input/input07") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let tip = ip.trim_end();
+                let row: Vec<i8> = tip.chars().map(|x| i8::try_from(u32::try_from(x).unwrap()).unwrap()).collect();
+                trees.push(row);
+            }
+        }
+    }
+    // let num_rows = trees.len();
+    // let num_cols = trees[0].len();
+
+    // let mut viz_from_left: Vec<Vec<(i8, bool)>> = vec![];
+    // let mut viz_from_right: Vec<VecDeque<(i8, bool)>> = vec![];
+    // let mut viz_from_top: Vec<Vec<bool>> = vec![];
+    // let mut viz_from_bottom: Vec<Vec<bool>> = vec![];
+
+    // for i in 0..num_rows {
+    //     viz_from_left.push(vec![(trees[i][0], true)]);
+    //     for j in 1..num_cols {
+    //         let p = viz_from_left[i][j - 1].0;
+    //         let v = trees[i][j];
+    //         let m = max(p, v);
+    //         viz_from_left[i].push((m, v > p));
+    //     }
+    // }
+
+    // for i in 0..num_rows {
+    //     viz_from_right.push(VecDeque::new());
+    //     viz_from_right[i].push_back((trees[i][num_cols - 1], true));
+    //     for j in 2..(num_cols + 1) {
+    //         let p = viz_from_right[i][0].0;
+    //         let v = trees[i][num_cols - j];
+    //         let m = max(p, v);
+    //         viz_from_right[i].push_front((m, v > p));
+    //     }
+    // }
+}
+
+fn move_me(head_x: &mut i32, head_y: &mut i32, tail_x: &mut i32, tail_y: &mut i32, amt: i32) {
+    *head_x += amt;
+    if ((*head_x - *tail_x).abs() <= 1) && ((*head_y - *tail_y).abs() <= 1) {
+        // Nothing to do, the head and tail are neighbors
+        return;
+    }
+    // Otherwise, the x distance has increased to two. We need to fix that
+    *tail_x += amt;
+    *tail_y = *head_y;
+}
+
+fn day09() {
+    let mut head_x: i32 = 0;
+    let mut head_y: i32 = 0;
+    let mut tail_x: i32 = 0;
+    let mut tail_y: i32 = 0;
+
+    let mut tail_history: Vec<(i32, i32)> = vec![(0, 0)];
+
+    if let Ok(lines) = read_lines("./input/input09") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let stip = ip.trim_end().split(" ").collect_vec();
+                let dir = stip[0];
+                let amt: i32 = stip[1].parse().unwrap();
+
+                for _ in 0..amt {
+                    match dir {
+                        "R" => move_me(&mut head_x, &mut head_y, &mut tail_x, &mut tail_y, 1),
+                        "L" => move_me(&mut head_x, &mut head_y, &mut tail_x, &mut tail_y, -1),
+                        "U" => move_me(&mut head_y, &mut head_x, &mut tail_y, &mut tail_x, 1),
+                        "D" => move_me(&mut head_y, &mut head_x, &mut tail_y, &mut tail_x, -1),
+                        _ => panic!("Can't happen"),
+                    }
+                    tail_history.push((tail_x, tail_y));
+                };
+            }
+        }
+    }
+    let t: HashSet<_> = tail_history.into_iter().collect();
+    println!("The answer to part 1 is: {}", t.len());
+}
+
 fn main() {
     day01();
     day02();
@@ -399,4 +486,6 @@ fn main() {
     day05();
     day06();
     day07();
+    day08();
+    day09();
 }
