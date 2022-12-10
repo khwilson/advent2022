@@ -1,3 +1,4 @@
+use core::num;
 use std::cmp::max;
 use std::collections::{HashSet, HashMap, VecDeque};
 use std::fs::File;
@@ -435,22 +436,35 @@ fn day08() {
     // }
 }
 
-fn move_me(head_x: &mut i32, head_y: &mut i32, tail_x: &mut i32, tail_y: &mut i32, amt: i32) {
-    *head_x += amt;
-    if ((*head_x - *tail_x).abs() <= 1) && ((*head_y - *tail_y).abs() <= 1) {
-        // Nothing to do, the head and tail are neighbors
-        return;
+fn move_me(xs: &mut Vec<i32>, ys: &mut Vec<i32>, amt: i32) {
+    xs[0] += amt;
+    for i in 1..xs.len() {
+        let xdist = (xs[i] - xs[i - 1]).abs();
+        let ydist = (ys[i] - ys[i - 1]).abs();
+        if (xdist <= 1) && (ydist <= 1) {
+            // They touch; nothing to do
+            return;
+        }
+        if xdist == 2 {
+            xs[i] = xs[i - 1] + (if xs[i - 1] < xs[i] { 1 } else { -1 });
+        } else {
+            xs[i] = xs[i - 1];
+        }
+        if ydist == 2 {
+            ys[i] = ys[i - 1] + (if ys[i - 1] < ys[i] { 1 } else { -1 });
+        } else {
+            ys[i] = ys[i - 1];
+        }
     }
-    // Otherwise, the x distance has increased to two. We need to fix that
-    *tail_x += amt;
-    *tail_y = *head_y;
 }
 
-fn day09() {
-    let mut head_x: i32 = 0;
-    let mut head_y: i32 = 0;
-    let mut tail_x: i32 = 0;
-    let mut tail_y: i32 = 0;
+fn day09_helper(num_knots: usize) -> usize {
+    let mut xs: Vec<i32> = vec![];
+    let mut ys: Vec<i32> = vec![];
+    for _ in 0..num_knots {
+        xs.push(0);
+        ys.push(0);
+    }
 
     let mut tail_history: Vec<(i32, i32)> = vec![(0, 0)];
 
@@ -463,19 +477,24 @@ fn day09() {
 
                 for _ in 0..amt {
                     match dir {
-                        "R" => move_me(&mut head_x, &mut head_y, &mut tail_x, &mut tail_y, 1),
-                        "L" => move_me(&mut head_x, &mut head_y, &mut tail_x, &mut tail_y, -1),
-                        "U" => move_me(&mut head_y, &mut head_x, &mut tail_y, &mut tail_x, 1),
-                        "D" => move_me(&mut head_y, &mut head_x, &mut tail_y, &mut tail_x, -1),
+                        "R" => move_me(&mut xs, &mut ys, 1),
+                        "L" => move_me(&mut xs, &mut ys, -1),
+                        "U" => move_me(&mut ys, &mut xs, 1),
+                        "D" => move_me(&mut ys, &mut xs, -1),
                         _ => panic!("Can't happen"),
                     }
-                    tail_history.push((tail_x, tail_y));
+                    tail_history.push((*xs.last().unwrap(), *ys.last().unwrap()));
                 };
             }
         }
     }
     let t: HashSet<_> = tail_history.into_iter().collect();
-    println!("The answer to part 1 is: {}", t.len());
+    t.len()
+}
+
+fn day09() {
+    println!("The answer to part 1 is: {}", day09_helper(2));
+    println!("The answer to part 2 is: {}", day09_helper(10));
 }
 
 fn main() {
