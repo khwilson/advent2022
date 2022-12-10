@@ -498,41 +498,44 @@ fn day09() {
 }
 
 fn day10() {
-    let mut reg = 1;
-    let mut cycle = 1;
-    let mut total = 0;
-    let interesting_cycles = vec![220, 180, 140, 100, 60, 20];
     if let Ok(lines) = read_lines("./input/input10") {
-        for line in lines {
-            if let Ok(ip) = line {
-                let mut stip = ip.trim_end().split(" ");
-                match stip.nth(0).unwrap() {
-                    "noop" => {
-                        cycle += 1;
-                        if interesting_cycles.contains(&cycle) {
-                            total += cycle * reg;
-                        }
-                    },
-                    "addx" => {
-                        let val: i32 = stip.nth(0).unwrap().parse().unwrap();
-                        for _ in 0..1 {
-                            cycle += 1;
-                            if interesting_cycles.contains(&cycle) {
-                                total += cycle * reg;
-                            }
-                        }
-                        cycle += 1;
-                        reg += val;
-                        if interesting_cycles.contains(&cycle) {
-                            total += cycle * reg;
-                        }
-                    },
-                    _ => panic!("Can't happen"),
-                }
+        let mut reg_vals: Vec<i32> = lines.map(|line| if let Ok(ip) = line {
+            let mut stip = ip.trim_end().split(" ");
+            match stip.nth(0).unwrap() {
+                "noop" => vec![0],
+                "addx" => {
+                    let val: i32 = stip.nth(0).unwrap().parse().unwrap();
+                    vec![0, val]
+                },
+                _ => panic!("Can't happen"),
+            }
+        } else { vec![] })
+        .flatten()
+        .scan(1, |acc, x| {
+            *acc = *acc + x;
+            Some(*acc)
+        }).collect();
+
+        let mut new_reg_vals = vec![1, 1];
+        new_reg_vals.append(&mut reg_vals);
+        let total: i32 = (0..6).map(|x| x * 40 + 20).map(|x| new_reg_vals[x] * i32::try_from(x).unwrap()).sum();
+        println!("The answer to part 1 is: {}", total);
+
+        print!("The answer to part 2 is:");
+        for i in 1..241 {
+            let x: i32 = i32::try_from(i - 1).unwrap() % 40;
+            if x == 0 {
+                println!();
+            }
+            if ((new_reg_vals[i] - 1) <=  x) &&
+                ((new_reg_vals[i] + 1) >= x){
+                print!("#");
+            } else {
+                print!(" ");
             }
         }
     }
-    println!("The answer to part 1 is: {}", total);
+    println!();
 }
 
 fn main() {
