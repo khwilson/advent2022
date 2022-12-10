@@ -497,6 +497,44 @@ fn day09() {
     println!("The answer to part 2 is: {}", day09_helper(10));
 }
 
+fn day10() {
+    let mut reg = 1;
+    let mut cycle = 1;
+    let mut total = 0;
+    let interesting_cycles = vec![220, 180, 140, 100, 60, 20];
+    if let Ok(lines) = read_lines("./input/input10") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let mut stip = ip.trim_end().split(" ");
+                match stip.nth(0).unwrap() {
+                    "noop" => {
+                        cycle += 1;
+                        if interesting_cycles.contains(&cycle) {
+                            total += cycle * reg;
+                        }
+                    },
+                    "addx" => {
+                        let val: i32 = stip.nth(0).unwrap().parse().unwrap();
+                        for _ in 0..1 {
+                            cycle += 1;
+                            if interesting_cycles.contains(&cycle) {
+                                total += cycle * reg;
+                            }
+                        }
+                        cycle += 1;
+                        reg += val;
+                        if interesting_cycles.contains(&cycle) {
+                            total += cycle * reg;
+                        }
+                    },
+                    _ => panic!("Can't happen"),
+                }
+            }
+        }
+    }
+    println!("The answer to part 1 is: {}", total);
+}
+
 fn main() {
     day01();
     day02();
@@ -507,4 +545,5 @@ fn main() {
     day07();
     day08();
     day09();
+    day10();
 }
