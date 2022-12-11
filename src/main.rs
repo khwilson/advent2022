@@ -527,8 +527,7 @@ fn day10() {
             if x == 0 {
                 println!();
             }
-            if ((new_reg_vals[i] - 1) <=  x) &&
-                ((new_reg_vals[i] + 1) >= x){
+            if ((new_reg_vals[i] - 1) <=  x) && ((new_reg_vals[i] + 1) >= x) {
                 print!("#");
             } else {
                 print!(" ");
@@ -536,6 +535,192 @@ fn day10() {
         }
     }
     println!();
+}
+
+struct Monkey {
+    items: Vec<i64>,
+    operation: fn(i64) -> i64,
+    test: fn(i64) -> bool,
+    true_monkey: usize,
+    false_monkey: usize,
+}
+
+fn day11() {
+    let mut monkeys: Vec<Monkey> = vec![
+        Monkey {
+            items: vec![66, 79],
+            operation: (|old| old * 11),
+            test: (|val| (val % 7) == 0),
+            true_monkey: 6,
+            false_monkey: 7,
+        },
+        Monkey {
+            items: vec![84, 94, 94, 81, 98, 75],
+            operation: |old| old * 17,
+            test: |val| (val % 13) == 0,
+            true_monkey: 5,
+            false_monkey: 2,
+        },
+        Monkey {
+            items: vec![85, 79, 59, 64, 79, 95, 67],
+            operation: |old| old + 8,
+            test: |val| (val % 5) == 0,
+            true_monkey: 4,
+            false_monkey: 5,
+        },
+        Monkey {
+            items: vec![70],
+            operation: |old| old + 3,
+            test: |val| (val % 19) == 0,
+            true_monkey: 6,
+            false_monkey: 0,
+        },
+        Monkey {
+            items: vec![57, 69, 78, 78],
+            operation: |old| old + 4,
+            test: |val| (val % 2) == 0,
+            true_monkey: 0,
+            false_monkey: 3,
+        },
+        Monkey {
+            items: vec![65, 92, 60, 74, 72],
+            operation: |old| old + 7,
+            test: |val| (val % 11) == 0,
+            true_monkey: 3,
+            false_monkey: 4,
+        },
+        Monkey {
+            items: vec![77, 91, 91],
+            operation: |old| old * old,
+            test: |val| (val % 17) == 0,
+            true_monkey: 1,
+            false_monkey: 7,
+        },
+        Monkey {
+            items: vec![76, 58, 57, 55, 67, 77, 54, 99],
+            operation: |old| old + 6,
+            test: |val| (val % 3) == 0,
+            true_monkey: 2,
+            false_monkey: 1,
+        },
+    ];
+    let mut monkey_counts: Vec<i32> = vec![0, 0, 0, 0, 0, 0, 0, 0];
+
+    // We work over 20 rounds
+    for _ in 0..20 {
+        for i in 0..monkeys.len() {
+            let monkey = &mut monkeys[i];
+
+            // Avoid unsafe operation by creating a temporary vector
+            let mut new_homes = vec![];
+            for j in 0..monkey.items.len() {
+                monkey_counts[i] += 1;
+                let item = (monkey.operation)(monkey.items[j]) / 3;
+                if (monkey.test)(item) {
+                    new_homes.push((monkey.true_monkey, item));
+                } else {
+                    new_homes.push((monkey.false_monkey, item));
+                }
+            }
+            monkey.items.clear();
+            for j in 0..new_homes.len() {
+                let monkey = &mut monkeys[new_homes[j].0];
+                monkey.items.push(new_homes[j].1);
+            }
+        }
+    }
+    monkey_counts.sort();
+    println!("The answer to part 1 is: {}", monkey_counts[monkey_counts.len() - 1] * monkey_counts[monkey_counts.len() - 2]);
+}
+
+fn day11_part2() {
+    let mut monkeys: Vec<Monkey> = vec![
+        Monkey {
+            items: vec![66, 79],
+            operation: (|old| old * 11),
+            test: (|val| (val % 7) == 0),
+            true_monkey: 6,
+            false_monkey: 7,
+        },
+        Monkey {
+            items: vec![84, 94, 94, 81, 98, 75],
+            operation: |old| old * 17,
+            test: |val| (val % 13) == 0,
+            true_monkey: 5,
+            false_monkey: 2,
+        },
+        Monkey {
+            items: vec![85, 79, 59, 64, 79, 95, 67],
+            operation: |old| old + 8,
+            test: |val| (val % 5) == 0,
+            true_monkey: 4,
+            false_monkey: 5,
+        },
+        Monkey {
+            items: vec![70],
+            operation: |old| old + 3,
+            test: |val| (val % 19) == 0,
+            true_monkey: 6,
+            false_monkey: 0,
+        },
+        Monkey {
+            items: vec![57, 69, 78, 78],
+            operation: |old| old + 4,
+            test: |val| (val % 2) == 0,
+            true_monkey: 0,
+            false_monkey: 3,
+        },
+        Monkey {
+            items: vec![65, 92, 60, 74, 72],
+            operation: |old| old + 7,
+            test: |val| (val % 11) == 0,
+            true_monkey: 3,
+            false_monkey: 4,
+        },
+        Monkey {
+            items: vec![77, 91, 91],
+            operation: |old| old * old,
+            test: |val| (val % 17) == 0,
+            true_monkey: 1,
+            false_monkey: 7,
+        },
+        Monkey {
+            items: vec![76, 58, 57, 55, 67, 77, 54, 99],
+            operation: |old| old + 6,
+            test: |val| (val % 3) == 0,
+            true_monkey: 2,
+            false_monkey: 1,
+        },
+    ];
+    let mut monkey_counts: Vec<i64> = vec![0, 0, 0, 0, 0, 0, 0, 0];
+    let primorial = 2 * 3 * 5 * 7 * 11 * 13 * 17 * 19;
+
+    // We work over 10000 rounds
+    for _ in 0..10_000 {
+        for i in 0..monkeys.len() {
+            let monkey = &mut monkeys[i];
+
+            // Avoid unsafe operation by creating a temporary vector
+            let mut new_homes = vec![];
+            for j in 0..monkey.items.len() {
+                monkey_counts[i] += 1;
+                let item = (monkey.operation)(monkey.items[j]) % primorial;
+                if (monkey.test)(item) {
+                    new_homes.push((monkey.true_monkey, item));
+                } else {
+                    new_homes.push((monkey.false_monkey, item));
+                }
+            }
+            monkey.items.clear();
+            for j in 0..new_homes.len() {
+                let monkey = &mut monkeys[new_homes[j].0];
+                monkey.items.push(new_homes[j].1);
+            }
+        }
+    }
+    monkey_counts.sort();
+    // println!("{:?}", monkey_counts);
+    println!("The answer to part 2 is: {}", monkey_counts[monkey_counts.len() - 1] * monkey_counts[monkey_counts.len() - 2]);
 }
 
 fn main() {
@@ -549,4 +734,6 @@ fn main() {
     day08();
     day09();
     day10();
+    day11();
+    day11_part2();
 }
