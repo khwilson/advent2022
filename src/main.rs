@@ -4,6 +4,7 @@ use std::collections::{HashSet, HashMap, VecDeque};
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+use std::u32::MAX;
 use std::vec;
 use itertools::Itertools;
 
@@ -645,6 +646,139 @@ fn day11() {
     day11_helper(2, 10_000, |num| num % (2 * 3 * 5 * 7 * 11 * 13 * 17 * 19));
 }
 
+fn char_to_i32(c: char) -> i32 {
+    let x: u32 = c.into();
+    i32::try_from(x).ok().unwrap()
+}
+
+fn day12() {
+    let mut terrain: Vec<Vec<i32>> = vec![];
+    let mut start_pos: (usize, usize) = (0, 0);
+    let mut end_pos: (usize, usize) = (0, 0);
+    if let Ok(lines) = read_lines("./input/input12") {
+        for (row_num, line) in lines.enumerate() {
+            if let Ok(ip) = line {
+                let tip = ip.trim_end();
+                let mut row = vec![];
+                for (col_num, char) in tip.chars().enumerate() {
+                    match char {
+                        'S' => {
+                            let val = char_to_i32('a') - 0x61;
+                            row.push(val);
+                            start_pos = (row_num, col_num);
+                        }
+                        'E' => {
+                            let val = char_to_i32('z') - 0x61;
+                            row.push(val);
+                            end_pos = (row_num, col_num);
+                        }
+                        x => {
+                            let val = char_to_i32(x) - 0x61;
+                            row.push(val);
+                        }
+                    }
+                }
+                terrain.push(row);
+            }
+        }
+    }
+
+    let mut queue: VecDeque<((usize, usize), u32)> = VecDeque::from([(start_pos, 0)]);
+    let mut seen: HashSet<_> = HashSet::from([start_pos]);
+    while !queue.is_empty() {
+        let ((r, c), len) = queue.pop_front().unwrap();
+        if (r == end_pos.0) && (c == end_pos.1) {
+            println!("The answer to part 1 is: {}", len);
+            break;
+        }
+        if r > 0 {
+            let next_pos = (r - 1, c);
+            if !seen.contains(&next_pos) {
+                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if r + 1 < terrain.len() {
+            let next_pos = (r + 1, c);
+            if !seen.contains(&next_pos) {
+                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if c > 0 {
+            let next_pos = (r, c - 1);
+            if !seen.contains(&next_pos) {
+                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if c + 1 < terrain[0].len() {
+            let next_pos = (r, c + 1);
+            if !seen.contains(&next_pos) {
+                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+
+        }
+    }
+
+    let mut queue: VecDeque<((usize, usize), u32)> = VecDeque::from([(end_pos, 0)]);
+    let mut seen: HashSet<_> = HashSet::from([end_pos]);
+    let mut min_dist: u32 = MAX;
+    while !queue.is_empty() {
+        let ((r, c), len) = queue.pop_front().unwrap();
+        if terrain[r][c] == 0 {
+            min_dist = if len < min_dist { len } else { min_dist };
+        }
+        if r > 0 {
+            let next_pos = (r - 1, c);
+            if !seen.contains(&next_pos) {
+                if terrain[r][c] <= terrain[next_pos.0][next_pos.1] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if r + 1 < terrain.len() {
+            let next_pos = (r + 1, c);
+            if !seen.contains(&next_pos) {
+                if terrain[r][c] <= terrain[next_pos.0][next_pos.1] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if c > 0 {
+            let next_pos = (r, c - 1);
+            if !seen.contains(&next_pos) {
+                if terrain[r][c] <= terrain[next_pos.0][next_pos.1] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+        }
+        if c + 1 < terrain[0].len() {
+            let next_pos = (r, c + 1);
+            if !seen.contains(&next_pos) {
+                if terrain[r][c] <= terrain[next_pos.0][next_pos.1] + 1 {
+                    queue.push_back((next_pos, len + 1));
+                    seen.insert(next_pos);
+                }
+            }
+
+        }
+    }
+    println!("The answer to part 2 is: {}", min_dist);
+}
+
 fn main() {
     day01();
     day02();
@@ -657,4 +791,5 @@ fn main() {
     day09();
     day10();
     day11();
+    day12();
 }
