@@ -683,53 +683,7 @@ fn day12() {
         }
     }
 
-    let mut queue: VecDeque<((usize, usize), u32)> = VecDeque::from([(start_pos, 0)]);
-    let mut seen: HashSet<_> = HashSet::from([start_pos]);
-    while !queue.is_empty() {
-        let ((r, c), len) = queue.pop_front().unwrap();
-        if (r == end_pos.0) && (c == end_pos.1) {
-            println!("The answer to part 1 is: {}", len);
-            break;
-        }
-        if r > 0 {
-            let next_pos = (r - 1, c);
-            if !seen.contains(&next_pos) {
-                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
-                    queue.push_back((next_pos, len + 1));
-                    seen.insert(next_pos);
-                }
-            }
-        }
-        if r + 1 < terrain.len() {
-            let next_pos = (r + 1, c);
-            if !seen.contains(&next_pos) {
-                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
-                    queue.push_back((next_pos, len + 1));
-                    seen.insert(next_pos);
-                }
-            }
-        }
-        if c > 0 {
-            let next_pos = (r, c - 1);
-            if !seen.contains(&next_pos) {
-                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
-                    queue.push_back((next_pos, len + 1));
-                    seen.insert(next_pos);
-                }
-            }
-        }
-        if c + 1 < terrain[0].len() {
-            let next_pos = (r, c + 1);
-            if !seen.contains(&next_pos) {
-                if terrain[next_pos.0][next_pos.1] <= terrain[r][c] + 1 {
-                    queue.push_back((next_pos, len + 1));
-                    seen.insert(next_pos);
-                }
-            }
-
-        }
-    }
-
+    let mut ans1 = 0;
     let mut queue: VecDeque<((usize, usize), u32)> = VecDeque::from([(end_pos, 0)]);
     let mut seen: HashSet<_> = HashSet::from([end_pos]);
     let mut min_dist: u32 = MAX;
@@ -738,6 +692,9 @@ fn day12() {
         if terrain[r][c] == 0 {
             min_dist = if len < min_dist { len } else { min_dist };
         }
+        if (r == start_pos.0) && (c == start_pos.1) {
+            ans1 = len;
+        }
         if r > 0 {
             let next_pos = (r - 1, c);
             if !seen.contains(&next_pos) {
@@ -776,6 +733,7 @@ fn day12() {
 
         }
     }
+    println!("The answer to part 1 is: {}", ans1);
     println!("The answer to part 2 is: {}", min_dist);
 }
 
