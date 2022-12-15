@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::{HashSet, HashMap, VecDeque};
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -5,6 +6,7 @@ use std::path::Path;
 use std::u32::MAX;
 use std::vec;
 use itertools::Itertools;
+use serde_json::{Value};
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -735,6 +737,96 @@ fn day12() {
     println!("The answer to part 2 is: {}", min_dist);
 }
 
+fn cmp13(left: &Value, right: &Value) -> Ordering {
+    match left {
+        Value::Array(x) => {
+            match right {
+                Value::Array(y) => {
+                    x.into_iter().zip(y.into_iter()).fold(
+                        Ordering::Equal,
+                        |acc, (xx, yy)| acc.then(cmp13(xx, yy))
+                    ).then(x.len().cmp(&y.len()))
+                },
+                Value::Number(y) => {
+                    let foo: Vec<Value> = vec![Value::Number(y.clone())];
+                    x.into_iter().zip(foo.into_iter()).fold(
+                        Ordering::Equal,
+                        |acc, (xx, yy)| acc.then(cmp13(xx, &yy))
+                    ).then(x.len().cmp(&1))
+                },
+                _ => panic!("No on right"),
+            }
+        },
+        Value::Number(x) => {
+            match right {
+                Value::Array(y) => {
+                    let foo: Vec<Value> = vec![Value::Number(x.clone())];
+                    foo.into_iter().zip(y.into_iter()).fold(
+                        Ordering::Equal,
+                        |acc, (xx, yy)| acc.then(cmp13(&xx, yy))
+                    ).then(1.cmp(&y.len()))
+                },
+                Value::Number(y) => {
+                    match (x.as_i64(), y.as_i64()) {
+                        (Some(xx), Some(yy)) => xx.cmp(&yy),
+                        _ => panic!("Can't happen"),
+                    }
+                },
+                _ => panic!("No on right"),
+            }
+        },
+        _ => panic!("No on left"),
+    }
+}
+
+fn day13() {
+    let mut total = 0;
+    let mut all_packets: Vec<Value> = vec![
+        serde_json::from_str("[[2]]").ok().unwrap(),
+        serde_json::from_str("[[6]]").ok().unwrap(),
+    ];
+    if let Ok(lines) = read_lines("./input/input13") {
+        let mut liter = lines.into_iter();
+        let mut idx = 1;
+        loop {
+            let line1 = match liter.next() {
+                Some(Ok(x)) => x,
+                _ => { break; }
+            };
+            let line2 = match liter.next() {
+                Some(Ok(x)) => x,
+                _ => { break; }
+            };
+            liter.next();  // Skip a blank line
+            let left: Value = serde_json::from_str(&line1).ok().unwrap();
+            let right: Value = serde_json::from_str(&line2).ok().unwrap();
+
+            if cmp13(&left, &right) <= Ordering::Equal {
+                total += idx;
+            }
+            idx += 1;
+
+            all_packets.push(left);
+            all_packets.push(right);
+        }
+    }
+    println!("The answer to part 1 is: {}", total);
+    all_packets.sort_by(cmp13);
+    let l: Value = serde_json::from_str("[[2]]").ok().unwrap();
+    let r: Value = serde_json::from_str("[[6]]").ok().unwrap();
+    let mut li = 0;
+    let mut ri = 0;
+    for i in 0..all_packets.len() {
+        if cmp13(&all_packets[i], &l) == Ordering::Equal {
+            li = i;
+        }
+        if cmp13(&all_packets[i], &r) == Ordering::Equal {
+            ri = i;
+        }
+    }
+    println!("The answer to part 2 is: {}", (li + 1) * (ri + 1));
+}
+
 fn main() {
     day01();
     day02();
@@ -748,4 +840,5 @@ fn main() {
     day10();
     day11();
     day12();
+    day13();
 }
