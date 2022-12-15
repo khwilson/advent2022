@@ -987,6 +987,58 @@ fn day15() {
     let foo: i64 = i64::try_from(blah.len()).ok().unwrap();
 
     println!("The answer to part 1 is: {}", ans_with_beacons - foo);
+
+    //////////////// SHOULD LUMP INTO A FUNCTION //////////////
+
+    for row in 0..4_000_001 {
+        // What intervals are covered? Inclusive on both sides
+        let mut intervals: Vec<(i64, i64)> = vec![];
+        for i in 0..num_coords {
+            let (sx, sy, bx, by) = coords[i];
+            let dist = (sx - bx).abs() + (sy - by).abs();
+            let ydist = (row - sy).abs();
+            let max_x_dist = dist - ydist;
+            if max_x_dist >= 0 {
+                intervals.push((sx - max_x_dist, sx + max_x_dist));
+            }
+        }
+
+        // Now we take the union
+        intervals.sort();
+        let mut new_intervals = vec![];
+        let mut cur_left = intervals[0].0;
+        let mut cur_right = intervals[0].1;
+        for i in 1..intervals.len() {
+            let (left, right) = intervals[i];
+            if left <= cur_right {
+                // cur_left <= left because we sorted
+                // So expand to the right if it's possible
+                cur_right = std::cmp::max(right, cur_right);
+            } else {
+                // We're starting a new interval
+                new_intervals.push((cur_left, cur_right));
+                cur_left = left;
+                cur_right = right;
+            }
+        }
+        // Push the last interval
+        new_intervals.push((cur_left, cur_right));
+        let mut min_in = new_intervals.len();
+        let mut max_in = new_intervals.len();
+        for i in 0..new_intervals.len() {
+            if (new_intervals[i].0 <= 0) && (0 <= new_intervals[i].1) {
+                min_in = i;
+            }
+            if (new_intervals[i].0 <= 4_000_000) && (4_000_000 <= new_intervals[i].1) {
+                max_in = i;
+            }
+        }
+        if min_in != max_in {
+            // Should actually check that there are two intervals; but visual inspection
+            // indicates that there are only two in this row
+            println!("The answer to part 2 is: {}", (new_intervals[0].1 + 1) * 4_000_000 + row);
+        }
+    }
 }
 
 fn main() {
