@@ -7,6 +7,8 @@ use std::u32::MAX;
 use std::vec;
 use itertools::Itertools;
 use serde_json::{Value};
+use lazy_static::lazy_static;
+use regex::Regex;
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -851,7 +853,7 @@ fn day14() {
     let max_y = coords.iter().flatten().map(|x| x.1).max().unwrap();
 
     // Setup the canvas
-    let mut canvas: Vec<Vec<u8>> = (0..(max_y + 3)).map(|_| (0..2002).map(|_| 0).collect_vec()).collect_vec();
+    let mut canvas: Vec<Vec<u8>> = (0..(max_y + 3)).map(|_| (0..1001).map(|_| 0).collect_vec()).collect_vec();
     for l in coords.iter() {
         for (left, right) in l.iter().tuple_windows() {
             let (left_x, left_y) = *left;
@@ -871,7 +873,7 @@ fn day14() {
             }
         }
     }
-    for j in 0..2002 {
+    for j in 0..1001 {
         canvas[max_y + 2][j] = 1;
     }
 
@@ -909,6 +911,84 @@ fn day14() {
     }
 }
 
+fn get_numbers(s: &str) -> (i64, i64, i64, i64) {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"\d+").unwrap();
+    }
+    RE.find_iter(s).filter_map(|d| d.as_str().parse().ok()).collect_tuple().unwrap()
+}
+
+fn day15() {
+    let mut coords: Vec<_> = vec![];
+    if let Ok(lines) = read_lines("./input/input15") {
+        for line in lines {
+            if let Ok(ip) = line {
+                coords.push(get_numbers(ip.trim_end()));
+            }
+        }
+    }
+    let num_coords = coords.len();
+    // let part_one_row = 10;
+    let part_one_row = 2000000;
+
+    // What intervals are covered? Inclusive on both sides
+    let mut intervals: Vec<(i64, i64)> = vec![];
+    for i in 0..num_coords {
+        let (sx, sy, bx, by) = coords[i];
+        let dist = (sx - bx).abs() + (sy - by).abs();
+        let ydist = (part_one_row - sy).abs();
+        let max_x_dist = dist - ydist;
+        if max_x_dist >= 0 {
+            intervals.push((sx - max_x_dist, sx + max_x_dist));
+        }
+    }
+
+    // Now we take the union
+    intervals.sort();
+    let mut new_intervals = vec![];
+    let mut cur_left = intervals[0].0;
+    let mut cur_right = intervals[0].1;
+    for i in 1..intervals.len() {
+        let (left, right) = intervals[i];
+        if left <= cur_right {
+            // cur_left <= left because we sorted
+            // So expand to the right if it's possible
+            cur_right = std::cmp::max(right, cur_right);
+        } else {
+            // We're starting a new interval
+            new_intervals.push((cur_left, cur_right));
+            cur_left = left;
+            cur_right = right;
+        }
+    }
+    // Push the last interval
+    new_intervals.push((cur_left, cur_right));
+
+    let ans_with_beacons: i64 = new_intervals.iter().map(|(l, r)| r - l + 1).sum();
+
+    // Need to subtract out beacons in these intervals
+    let mut beacons: Vec<i64> = vec![];
+    for i in 0..num_coords {
+        if coords[i].3 == part_one_row {
+            beacons.push(coords[i].2);
+        }
+    }
+
+    let mut blah: HashSet<i64> = HashSet::new();
+    let num_intervals = new_intervals.len();
+    for i in 0..beacons.len() {
+        let bx = beacons[i];
+        for j in 0..num_intervals {
+            if (new_intervals[j].0 <= bx) && (bx <= new_intervals[j].1) {
+                blah.insert(bx);
+            }
+        }
+    }
+    let foo: i64 = i64::try_from(blah.len()).ok().unwrap();
+
+    println!("The answer to part 1 is: {}", ans_with_beacons - foo);
+}
+
 fn main() {
     day01();
     day02();
@@ -924,4 +1004,5 @@ fn main() {
     day12();
     day13();
     day14();
+    day15();
 }
