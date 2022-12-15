@@ -827,6 +827,88 @@ fn day13() {
     println!("The answer to part 2 is: {}", (li + 1) * (ri + 1));
 }
 
+fn day14() {
+    let mut coords: Vec<Vec<(usize, usize)>> = vec![];
+    if let Ok(lines) = read_lines("./input/input14") {
+        for line in lines {
+            if let Ok(ip) = line {
+                let tip = ip.trim_end();
+                let mut row = vec![];
+                for coord_pair in tip.split(" -> ") {
+                    let foo: (&str, &str) = coord_pair.split(",").collect_tuple().unwrap();
+                    let x: usize = foo.0.parse().unwrap();
+                    let y: usize = foo.1.parse().unwrap();
+                    row.push((x, y));
+                }
+                coords.push(row);
+            }
+        }
+    }
+
+    // let min_x = coords.iter().flatten().map(|x| x.0).min().unwrap();
+    // let max_x = coords.iter().flatten().map(|x| x.0).max().unwrap();
+    // let min_y = coords.iter().flatten().map(|x| x.1).min().unwrap();
+    let max_y = coords.iter().flatten().map(|x| x.1).max().unwrap();
+
+    // Setup the canvas
+    let mut canvas: Vec<Vec<u8>> = (0..(max_y + 3)).map(|_| (0..2002).map(|_| 0).collect_vec()).collect_vec();
+    for l in coords.iter() {
+        for (left, right) in l.iter().tuple_windows() {
+            let (left_x, left_y) = *left;
+            let (right_x, right_y) = *right;
+            if left_x == right_x {
+                let lo_y = std::cmp::min(left_y, right_y);
+                let hi_y = std::cmp::max(left_y, right_y);
+                for j in lo_y..(hi_y + 1) {
+                    canvas[j][left_x] = 1;
+                }
+            } else {
+                let lo_x = std::cmp::min(left_x, right_x);
+                let hi_x = std::cmp::max(left_x, right_x);
+                for j in lo_x..(hi_x + 1) {
+                    canvas[left_y][j] = 1;
+                }
+            }
+        }
+    }
+    for j in 0..2002 {
+        canvas[max_y + 2][j] = 1;
+    }
+
+    let mut count = 0;
+    let mut part_one_answered = false;
+    loop {
+        let mut sand_x = 500;
+        let mut sand_y = 0;
+        count += 1;
+        loop {
+            if sand_y == max_y {
+                if !part_one_answered {
+                    println!("The answer to part 1 is: {}", count - 1);
+                    part_one_answered = true;
+                }
+            }
+            if canvas[sand_y + 1][sand_x] == 0 {
+                sand_y += 1;
+            } else if canvas[sand_y + 1][sand_x - 1] == 0 {
+                sand_y += 1;
+                sand_x -= 1;
+            } else if canvas[sand_y + 1][sand_x + 1] == 0 {
+                sand_y += 1;
+                sand_x += 1;
+            } else {
+                canvas[sand_y][sand_x] = 2;
+                if (sand_x == 500) && (sand_y == 0) {
+                    println!("The answer to part 2 is: {}", count);
+                    return;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     day01();
     day02();
@@ -841,4 +923,5 @@ fn main() {
     day11();
     day12();
     day13();
+    day14();
 }
